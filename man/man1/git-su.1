@@ -1,0 +1,83 @@
+.\" git-su.1 - man page for git-su
+.TH GIT\-SU 1
+.SH NAME
+git-su \- manage Git users, switch between users, pair programming
+.SH SYNOPSIS
+.B git su
+[\fIOPTIONS\fR] [\fIuser\fR...]
+.SH DESCRIPTION
+\fBgit-su\fR helps you manage your Git user identity:
+.IP \(bu 2
+See which user Git will use to commit
+.IP \(bu 2
+Switch between Git users quickly
+.IP \(bu 2
+Keep a list of users and switch by initials or name
+.IP \(bu 2
+Switch to multiple users at once (pairing)
+.SH OPTIONS
+.TP
+.BR \-t ", " \-\-list
+List the configured users (stored in \fI~/.git-su\fR).
+.TP
+.BR \-c ", " \-\-clear
+Clear the current user. If a scope (\fB\-\-local\fR, \fB\-\-global\fR, or \fB\-\-system\fR) is given, only that scope is cleared.
+.TP
+.BR \-a ", " \-\-add " \fIUSER\fR"
+Add a user. Use the format "Jane Doe <jane@example.com>". You can then switch by initials, e.g. \fBgit su jd\fR.
+.TP
+.BR \-e ", " \-\-edit
+Open the Gitsu user list (\fI~/.git-su\fR) in your editor (same as Git config editor).
+.TP
+.BR \-l ", " \-\-local
+Use local scope (current repository).
+.TP
+.BR \-g ", " \-\-global
+Use global scope (current user).
+.TP
+.BR \-s ", " \-\-system
+Use system scope.
+.TP
+.BR \-h ", " \-\-help
+Show help.
+.TP
+.BR \-V ", " \-\-version
+Show version.
+.SH CONFIGURATION
+Set with \fBgit config\fR or in Git config files:
+.TP
+.B gitsu.defaultSelectScope
+One of \fBlocal\fR, \fBglobal\fR, or \fBsystem\fR. Default scope when switching. Default is \fBlocal\fR.
+.TP
+.B gitsu.groupEmailAddress
+Group email for pairing; e.g. \fBdev@example.com\fR. Pairing emails look like \fIdev+jane+bob@example.com\fR.
+.TP
+.B color.ui
+If set (e.g. \fBtrue\fR), output is colored like Git.
+.SH FILES
+\fI~/.git-su\fR \- User list in TOML format; each entry has \fIname\fR and \fIemail\fR under \fB[[user]]\fR
+.SH EXAMPLES
+.TP
+Show current user in all scopes
+.EX
+git su
+.EE
+.TP
+Add a user and switch by initials
+.EX
+git su \-\-add 'Bob Smith <bob@example.com>'
+git su bob
+.EE
+.TP
+Switch in a specific scope
+.EX
+git su jane \-\-system
+.EE
+.TP
+Pair (two users in one identity)
+.EX
+git su jane bob
+.EE
+.SH SEE ALSO
+.BR git (1),
+.BR git-config (1)

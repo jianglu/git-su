@@ -1,0 +1,16 @@
+[package]
+name = "git-su"
+version = "0.1.0"
+edition = "2021"
+description = "Manage Git users, switch identity quickly, and support pairing (multi-user) commits"
+license = "MIT"
+license-file = "LICENSE"
+repository = "https://github.com/jianglu/git-su"
+keywords = ["git", "user", "identity", "gitsu", "pairing"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+dialoguer = "0.11"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
