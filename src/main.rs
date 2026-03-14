@@ -149,8 +149,9 @@ fn run_no_args(
 
         let add_user_index = items.len() - 1;
         let _ = writeln!(stdout);
+        let select_prompt = git_su::color::label("Select user:");
         let selection = Select::new()
-            .with_prompt("Select user")
+            .with_prompt(&select_prompt)
             .items(&items)
             .default(0)
             .interact_opt()?;
@@ -158,19 +159,20 @@ fn run_no_args(
         match selection {
             None => return Ok(()),
             Some(0) => {
-                if scopes.is_empty() {
-                    switcher.print_current(&[], stdout);
-                } else {
-                    switcher.print_current(scopes, stdout);
-                }
+                // Already shown at start, no need to repeat
                 return Ok(());
             }
             Some(i) if i == add_user_index => {
-                let user_str: String = Input::new()
-                    .with_prompt("User (Name <email@example.com>)")
+                let name: String = Input::new()
+                    .with_prompt("Name")
                     .allow_empty(false)
                     .interact_text()?;
-                switcher.add(user_str.trim(), stdout);
+                let email: String = Input::new()
+                    .with_prompt("Email")
+                    .allow_empty(false)
+                    .interact_text()?;
+                let user_str = format!("{} <{}>", name.trim(), email.trim());
+                switcher.add(&user_str, stdout);
                 return Ok(());
             }
             Some(i) => {

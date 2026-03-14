@@ -1,3 +1,4 @@
+pub mod color;
 mod config_repository;
 mod git;
 mod shell;

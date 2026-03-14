@@ -39,7 +39,7 @@ impl<'a> Switcher<'a> {
         let found = match self.user_list.find(&not_parsed) {
             Ok(users) => users,
             Err(e) => {
-                let _ = writeln!(output, "{}", e);
+                let _ = writeln!(output, "{}", crate::color::error(&e.to_string()));
                 return;
             }
         };
@@ -63,9 +63,12 @@ impl<'a> Switcher<'a> {
         if Git::select_user(&combined, actual_scope) {
             let _ = writeln!(
                 output,
-                "Switched {} user to {}",
-                actual_scope.display_name(),
-                Git::render(&combined)
+                "{}",
+                crate::color::success(&format!(
+                    "Switched {} user to {}",
+                    actual_scope.display_name(),
+                    Git::render(&combined)
+                ))
             );
         }
 
@@ -80,18 +83,39 @@ impl<'a> Switcher<'a> {
         const LABEL_WIDTH: usize = 6; // Local, Global, System
         let show_all = scopes.is_empty();
         if show_all {
-            let _ = writeln!(output, "Current user: {}", Git::render(&Git::selected_user(Scope::Derived)));
+            let _ = writeln!(
+                output,
+                "{} {}",
+                crate::color::label("Current user:"),
+                Git::render(&Git::selected_user(Scope::Derived))
+            );
             let _ = writeln!(output);
-            let _ = writeln!(output, "{:>1$}: {2}", "Local", LABEL_WIDTH, Git::render(&Git::selected_user(Scope::Local)));
-            let _ = writeln!(output, "{:>1$}: {2}", "Global", LABEL_WIDTH, Git::render(&Git::selected_user(Scope::Global)));
-            let _ = writeln!(output, "{:>1$}: {2}", "System", LABEL_WIDTH, Git::render(&Git::selected_user(Scope::System)));
+            for (scope_label, scope) in [
+                ("Local", Scope::Local),
+                ("Global", Scope::Global),
+                ("System", Scope::System),
+            ] {
+                let padded = format!("{:>1$}", scope_label, LABEL_WIDTH);
+                let _ = writeln!(
+                    output,
+                    "{}: {}",
+                    crate::color::label(&padded),
+                    Git::render(&Git::selected_user(scope))
+                );
+            }
         } else {
             for scope in scopes {
                 let label = scope.display_name();
                 let w = label.len().max(LABEL_WIDTH);
                 let u = Git::selected_user(*scope);
                 if !u.is_none() {
-                    let _ = writeln!(output, "{:<1$}: {2}", label, w, Git::render(&u));
+                    let padded = format!("{:<1$}", label, w);
+                    let _ = writeln!(
+                        output,
+                        "{}: {}",
+                        crate::color::label(&padded),
+                        Git::render(&u)
+                    );
                 }
             }
         }
@@ -106,8 +130,11 @@ impl<'a> Switcher<'a> {
         let scope_names: Vec<&str> = scopes.iter().map(|s| s.as_flag()).collect();
         let _ = writeln!(
             output,
-            "Clearing Git user in {} scope(s)",
-            scope_names.join(", ")
+            "{}",
+            crate::color::dim(&format!(
+                "Clearing Git user in {} scope(s)",
+                scope_names.join(", ")
+            ))
         );
         for scope in scopes {
             Git::clear_user(scope);
@@ -124,20 +151,27 @@ impl<'a> Switcher<'a> {
         let user = match User::parse(user_string) {
             Ok(u) => u,
             Err(e) => {
-                let _ = writeln!(output, "{}", e);
+                let _ = writeln!(output, "{}", crate::color::error(&e.to_string()));
                 return;
             }
         };
         if self.user_list.list().iter().any(|u| u == &user) {
             let _ = writeln!(
                 output,
-                "User '{}' already in user list (try switching to them with 'git su {}')",
-                user,
-                user.initials()
+                "{}",
+                crate::color::dim(&format!(
+                    "User '{}' already in user list (try switching to them with 'git su {}')",
+                    user,
+                    user.initials()
+                ))
             );
         } else {
             self.user_list.add(&user);
-            let _ = writeln!(output, "User '{}' added to users", user);
+            let _ = writeln!(
+                output,
+                "{}",
+                crate::color::success(&format!("User '{}' added to users", user))
+            );
         }
     }
 

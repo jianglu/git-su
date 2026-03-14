@@ -1,5 +1,7 @@
 // Git: config get/set/unset, scopes local/global/system
 
+use std::io::IsTerminal;
+
 use crate::shell;
 use crate::user::User;
 
@@ -131,9 +133,12 @@ impl Git {
     }
 
     pub fn color_output() -> bool {
-        let cmd = "git config --get-colorbool color.ui";
-        let v = shell::capture(cmd);
-        v == "true" || v == "always"
+        if !std::io::stdout().is_terminal() {
+            return false;
+        }
+        let cmd = "git config --get-colorbool color.ui true";
+        let v = shell::capture(cmd).trim().to_string();
+        v == "true"
     }
 
     pub fn render(user: &User) -> String {
