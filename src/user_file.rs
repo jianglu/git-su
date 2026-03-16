@@ -59,3 +59,46 @@ impl UserFile {
         fs::write(&self.path, s)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_empty_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(".git-su");
+        fs::write(&path, "").unwrap();
+        let uf = UserFile::new(&path);
+        assert!(uf.read().is_empty());
+    }
+
+    #[test]
+    fn write_and_read_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(".git-su");
+        let uf = UserFile::new(&path);
+        let u = User::new("Jane Doe", "jane@example.com");
+        uf.write(&u).unwrap();
+        let list = uf.read();
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].name(), "Jane Doe");
+        assert_eq!(list[0].email(), "jane@example.com");
+    }
+
+    #[test]
+    fn read_valid_toml() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(".git-su");
+        let toml = r#"[[user]]
+name = "Bob"
+email = "bob@example.com"
+"#;
+        fs::write(&path, toml).unwrap();
+        let uf = UserFile::new(&path);
+        let list = uf.read();
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0].name(), "Bob");
+        assert_eq!(list[0].email(), "bob@example.com");
+    }
+}

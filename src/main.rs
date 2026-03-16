@@ -158,10 +158,6 @@ fn run_no_args(
 
         match selection {
             None => return Ok(()),
-            Some(0) => {
-                // Already shown at start, no need to repeat
-                return Ok(());
-            }
             Some(i) if i == add_user_index => {
                 let name: String = Input::new()
                     .with_prompt("Name")

@@ -87,3 +87,67 @@ impl UserList {
         combinations.into_iter().find(|c| c.len() == term_matches.len())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::user_file::UserFile;
+    use std::fs;
+
+    fn list_with_users(users: &[(&str, &str)]) -> (UserList, tempfile::TempDir) {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(".git-su");
+        fs::write(&path, "").unwrap();
+        let uf = UserFile::new(&path);
+        for (name, email) in users {
+            uf.write(&User::new(*name, *email)).unwrap();
+        }
+        (UserList::new(uf), dir)
+    }
+
+    #[test]
+    fn find_by_initials() {
+        let (list, _dir) = list_with_users(&[
+            ("Jane Doe", "jane@example.com"),
+            ("Bob Smith", "bob@example.com"),
+        ]);
+        let found = list.find(&["jd".to_string()]).unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].name(), "Jane Doe");
+    }
+
+    #[test]
+    fn find_by_name_part() {
+        let (list, _dir) = list_with_users(&[("Alice Cooper", "alice@example.com")]);
+        let found = list.find(&["alice".to_string()]).unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].name(), "Alice Cooper");
+    }
+
+    #[test]
+    fn find_no_match() {
+        let (list, _dir) = list_with_users(&[("Jane Doe", "jane@example.com")]);
+        let r = list.find(&["xyz".to_string()]);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn find_pair_two_terms() {
+        let (list, _dir) = list_with_users(&[
+            ("Jane Doe", "jane@example.com"),
+            ("Bob Smith", "bob@example.com"),
+        ]);
+        let found = list.find(&["jd".to_string(), "bob".to_string()]).unwrap();
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0].name(), "Jane Doe");
+        assert_eq!(found[1].name(), "Bob Smith");
+    }
+
+    #[test]
+    fn list_returns_added_users() {
+        let (list, _dir) = list_with_users(&[("Jane Doe", "jane@example.com")]);
+        let all = list.list();
+        assert_eq!(all.len(), 1);
+        assert_eq!(all[0].email(), "jane@example.com");
+    }
+}

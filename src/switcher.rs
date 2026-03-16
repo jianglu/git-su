@@ -70,6 +70,15 @@ impl<'a> Switcher<'a> {
                     Git::render(&combined)
                 ))
             );
+        } else {
+            let _ = writeln!(
+                output,
+                "{}",
+                crate::color::error(&format!(
+                    "Failed to set user in {} scope (e.g. system scope may need: sudo git su --system <user>)",
+                    actual_scope.display_name()
+                ))
+            );
         }
 
         for u in &parsed {
@@ -104,19 +113,24 @@ impl<'a> Switcher<'a> {
                 );
             }
         } else {
-            for scope in scopes {
-                let label = scope.display_name();
-                let w = label.len().max(LABEL_WIDTH);
-                let u = Git::selected_user(*scope);
-                if !u.is_none() {
-                    let padded = format!("{:<1$}", label, w);
-                    let _ = writeln!(
-                        output,
-                        "{}: {}",
-                        crate::color::label(&padded),
-                        Git::render(&u)
-                    );
+            let scope_labels: [(&str, Scope); 3] = [
+                ("Local", Scope::Local),
+                ("Global", Scope::Global),
+                ("System", Scope::System),
+            ];
+            for (scope_label, scope) in scope_labels {
+                if !scopes.contains(&scope) {
+                    continue;
                 }
+                let w = scope_label.len().max(LABEL_WIDTH);
+                let padded = format!("{:<1$}", scope_label, w);
+                let u = Git::selected_user(scope);
+                let _ = writeln!(
+                    output,
+                    "{}: {}",
+                    crate::color::label(&padded),
+                    Git::render(&u)
+                );
             }
         }
     }

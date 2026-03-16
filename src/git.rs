@@ -49,14 +49,12 @@ impl Git {
     }
 
     pub fn set_config(scope: Scope, key: &str, value: &str) -> bool {
-        let escaped = value.replace("'", "'\\''");
-        let suffix = format!("{} '{}'", key, escaped);
-        let cmd = if scope == Scope::Derived {
-            format!("git config {}", suffix)
+        let scope_flag = if scope == Scope::Derived {
+            None
         } else {
-            format!("git config --{} {}", scope.as_flag(), suffix)
+            Some(scope.as_flag())
         };
-        shell::execute(&cmd)
+        shell::git_config_set(scope_flag, key, value)
     }
 
     pub fn unset_config(scope: Scope, key: &str) -> bool {

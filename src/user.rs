@@ -126,3 +126,72 @@ impl fmt::Display for ParseError {
 }
 
 impl std::error::Error for ParseError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_valid_user() {
+        let u = User::parse("Jane Doe <jane@example.com>").unwrap();
+        assert_eq!(u.name(), "Jane Doe");
+        assert_eq!(u.email(), "jane@example.com");
+        assert_eq!(u.initials(), "jd");
+    }
+
+    #[test]
+    fn parse_with_extra_spaces() {
+        let u = User::parse("  Jane Doe  <  jane@example.com  >  ").unwrap();
+        assert_eq!(u.name(), "Jane Doe");
+        assert_eq!(u.email(), "jane@example.com");
+    }
+
+    #[test]
+    fn parse_invalid_no_angle() {
+        assert!(User::parse("Jane Doe jane@example.com").is_err());
+    }
+
+    #[test]
+    fn parse_invalid_empty_name() {
+        assert!(User::parse("<jane@example.com>").is_err());
+    }
+
+    #[test]
+    fn initials_multiple_words() {
+        let u = User::new("John Paul Smith", "j@x.com");
+        assert_eq!(u.initials(), "jps");
+    }
+
+    #[test]
+    fn none_user() {
+        let n = User::none();
+        assert!(n.is_none());
+        assert_eq!(n.name(), "(none)");
+        assert_eq!(n.email(), "");
+    }
+
+    #[test]
+    fn combine_two_users() {
+        let a = User::new("Alice", "a@x.com");
+        let b = User::new("Bob", "b@x.com");
+        let c = a.combine(&b, "dev@example.com");
+        assert_eq!(c.name(), "Alice and Bob");
+        assert_eq!(c.email(), "dev+a+b@example.com");
+    }
+
+    #[test]
+    fn combine_with_none() {
+        let a = User::new("Alice", "a@x.com");
+        let n = User::none();
+        let c = n.combine(&a, "dev@x.com");
+        assert_eq!(c.name(), "Alice");
+        assert_eq!(c.email(), "a@x.com");
+    }
+
+    #[test]
+    fn user_equality() {
+        let a = User::parse("Jane Doe <jane@example.com>").unwrap();
+        let b = User::new("Jane Doe", "jane@example.com");
+        assert_eq!(a, b);
+    }
+}
